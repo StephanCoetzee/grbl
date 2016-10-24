@@ -227,6 +227,11 @@ void report_grbl_settings() {
   printPgmString(PSTR(" (magazine gap limit, mm)"));
   printPgmString(PSTR("\r\n$41=")); print_uint8_base10(settings.mag_gap_enabled);
   printPgmString(PSTR(" (magazine gap enabled, bool)"));
+<<<<<<< fba0f2da46aaefc9b30bae00a00127046d3fe486
+=======
+  
+
+>>>>>>> Add magazine gap monitor to eeprom
   /* End KEYME Specific */
   printPgmString(PSTR("\r\n"));
 }

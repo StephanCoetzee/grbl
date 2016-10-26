@@ -39,6 +39,7 @@
 #include "probe.h"
 #include "adc.h"
 
+#define FILTER_ALPHA 0.3
 
 // Handles the primary confirmation protocol response for streaming interfaces and human-feedback.
 // For every incoming line, this method responds with an 'ok' for a successful command or an
@@ -227,11 +228,6 @@ void report_grbl_settings() {
   printPgmString(PSTR(" (magazine gap limit, mm)"));
   printPgmString(PSTR("\r\n$41=")); print_uint8_base10(settings.mag_gap_enabled);
   printPgmString(PSTR(" (magazine gap enabled, bool)"));
-<<<<<<< fba0f2da46aaefc9b30bae00a00127046d3fe486
-=======
-  
-
->>>>>>> Add magazine gap monitor to eeprom
   /* End KEYME Specific */
   printPgmString(PSTR("\r\n"));
 }
@@ -398,7 +394,7 @@ void report_voltage()
   calculate_motor_voltage();
   printPgmString( PSTR("|") );
   for (i = 0; i < VOLTAGE_SENSOR_COUNT; i++) {
-    printInteger((uint32_t)analog_voltage_readings[i]);
+    printInteger((uint32_t)analog_voltage_readings[i][N_FILTER]);
     if (i < VOLTAGE_SENSOR_COUNT - 1)
       printPgmString(PSTR(","));
   }
@@ -414,7 +410,7 @@ void calculate_motor_voltage(){
     // Assumes the motors are on ADC channels 0-3 and in the same
     // order in analog_voltage_readings If the pins are changed, a
     // map should be made to motors to ADC channels.
-    analog_voltage_readings[i] = adc_read_channel(i);
+      analog_voltage_readings[i][N_FILTER] = adc_read_channel(i);
   }
 }
 
@@ -422,16 +418,33 @@ void calculate_motor_voltage(){
 void calculate_force_voltage()
 {
   #ifdef USE_LOAD_CELL
-    analog_voltage_readings[FORCE_VALUE_INDEX] = adc_read_channel(LC_ADC);
+    analog_voltage_readings_x[FORCE_VALUE_INDEX][N_FILTER] = adc_read_channel(LC_ADC);
   #else
-    analog_voltage_readings[FORCE_VALUE_INDEX] = adc_read_channel(F_ADC); 
+    analog_voltage_readings_x[FORCE_VALUE_INDEX][N_FILTER] = adc_read_channel(F_ADC); 
   #endif
+    /*
+    Filter:
+      Moving average Hanning Filter:
+      y[k] = 0.25 * (x[k] + 2x[k-1] + x[k-2])
+    */
+    analog_voltage_readings[FORCE_VALUE_INDEX][N_FILTER] = \
+    (uint16_t)(0.25 * (analog_voltage_readings_x[FORCE_VALUE_INDEX][N_FILTER] \
+    + (2 * analog_voltage_readings_x[FORCE_VALUE_INDEX][N_FILTER - 1]) \
+    + analog_voltage_readings_x[FORCE_VALUE_INDEX][N_FILTER] ));
+
+    // Advance all values in the filtered and unfiltered arrays
+    uint8_t idx;
+    for (idx = 0; idx < N_FILTER; idx++) {
+      analog_voltage_readings[FORCE_VALUE_INDEX][idx] = analog_voltage_readings[FORCE_VALUE_INDEX][idx + 1];
+      analog_voltage_readings_x[FORCE_VALUE_INDEX][idx] = analog_voltage_readings_x[FORCE_VALUE_INDEX][idx + 1];
+    } 
+  
 }
 
 // Report the version of the board based on the revision voltage divider
 void report_revision()
 {
-  analog_voltage_readings[REV_VALUE_INDEX] = adc_read_channel(RD_ADC);
+  analog_voltage_readings[REV_VALUE_INDEX][N_FILTER] = adc_read_channel(RD_ADC);
 }
 
 

@@ -386,7 +386,7 @@ void st_force_check()
   // Once the desired value is reached, the gripper motor will stop.
   // Threshold Value can be tweaked for desired target force value
   
-  int16_t delta = analog_voltage_readings[FORCE_VALUE_INDEX] - limits.bump_grip_force;
+  int16_t delta = analog_voltage_readings[FORCE_VALUE_INDEX][N_FILTER] - limits.bump_grip_force;
   if (abs(delta) <= GRIPPER_FORCE_THRESHOLD) {
     limits.isservoing = 0;
     request_report(REQUEST_STATUS_REPORT | REQUEST_LIMIT_REPORT, LINENUMBER_EMPTY_BLOCK);    

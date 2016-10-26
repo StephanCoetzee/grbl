@@ -351,10 +351,10 @@ void limits_force_servo()
   // Initialize homing in search mode to quickly engage the specified cycle_mask limit switches.
   uint8_t approach = ~0;
 
-  if (analog_voltage_readings[FORCE_VALUE_INDEX] < (limits.bump_grip_force - GRIPPER_FORCE_THRESHOLD)) {
+  if (analog_voltage_readings[FORCE_VALUE_INDEX][N_FILTER] < (limits.bump_grip_force - GRIPPER_FORCE_THRESHOLD)) {
     travel = MAXSERVODIST;
   }
-  else if(analog_voltage_readings[FORCE_VALUE_INDEX] > (limits.bump_grip_force + GRIPPER_FORCE_THRESHOLD)) {
+  else if(analog_voltage_readings[FORCE_VALUE_INDEX][N_FILTER] > (limits.bump_grip_force + GRIPPER_FORCE_THRESHOLD)) {
     travel = -(MAXSERVODIST);
   }
   //approach has all bits set (negative dir) or none (positive)

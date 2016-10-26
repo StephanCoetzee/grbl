@@ -94,8 +94,6 @@ int main(void)
     plan_reset(); // Clear block buffer and planner variables
     st_reset(); // Clear stepper subsystem variables.
     progman_init();
-    report_revision(); // ADC - read revision voltage form revision voltage divider  
-  
 
     // Sync cleared gcode and planner positions to current system position.
     plan_sync_position();

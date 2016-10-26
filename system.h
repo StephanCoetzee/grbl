@@ -88,6 +88,8 @@
 #define SYSFLAG_EOL_REPORT bit(0)  // Block is done executing, report linenum
 #define SYSFLAG_AUTOSTART  bit(1)  // autostart is active
 
+uint16_t force_target_val;
+
 // Define global system variables
 typedef struct {
   uint8_t abort;                 // System abort flag. Forces exit back to main loop for reset.

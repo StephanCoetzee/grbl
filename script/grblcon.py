@@ -42,33 +42,6 @@ class Positions:
         ])
 
 
-class ADCs:
-    """ A simple object to parse and maintain ADC values
-    """
-
-    # pylint: disable=too-few-public-methods
-
-    def __init__(self, adc_string='0,0,0,0,0,0'):
-
-        # pylint: disable=invalid-name
-        self.x, self.y, self.z, self.c, self.force, self.revdiv = [
-            int(x) for x in adc_string.split(',')
-        ]
-
-    def __str__(self):
-        return '\n'.join([
-            'ADCs',
-            '---------',
-            'X: {}'.format(self.x),
-            'Y: {}'.format(self.y),
-            'Z (Gripper): {}'.format(self.z),
-            'C (Carousel): {}'.format(self.c),
-            'Force'.format(self.force),
-            'Revision V: {}'.format(self.revdiv),
-            '\n'
-        ])
-
-
 class Status:
     """Data container object which holds grbl state status and can return
     a string appropriate for display in the status header.
@@ -81,7 +54,6 @@ class Status:
         self.state = None
         self.mach_positions = None
         self.work_positions = None
-        self.adcs = None
         self.line = None
         self.limit_flags = None
         self.reset()
@@ -96,7 +68,6 @@ class Status:
         self.state = 'Disconnected'
         self.mach_positions = Positions()
         self.work_positions = Positions()
-        self.adcs = ADCs()
         self.line = '0'
         self.limit_flags = '0000000000'
 
@@ -116,16 +87,7 @@ class Status:
                 self.work_positions.c
             ),
             "Line: {}".format(self.line),
-            "Limit Flags: {}".format(self.limit_flags),
-            "ADCs: {}, {}, {}, {}, {}, {}".format(
-                self.adcs.x,
-                self.adcs.y,
-                self.adcs.z,
-                self.adcs.c,
-                self.adcs.force,
-                self.adcs.revdiv
-
-            )
+            "Limit Flags: {}".format(self.limit_flags)
         ])
 
 
@@ -172,6 +134,7 @@ class GrblCon:
         'log': '/0 Display the event log',
         'open': '/2 (dev, baud) Open a grbl connection to dev@baud',
         'quit': '/0 Close any active grbl connection and exit',
+        'readadc': '/0 Performs a read of the on-board ADCs',
         'reset': '/1 (hard?) Reset GRBL via command. If `reset hard`, performs a hardware reset',
         'run': '/0 Begins execution of loaded gcode program',
         'toggle_quiet': '/0 Toggle squelching of status messages',
@@ -202,9 +165,6 @@ class GrblCon:
         # Set our prompt
         self._text_entry = urwid.Edit('>>> ')
         self._screen = raw_display.Screen()
-
-        # ADC poll interval
-        self.adc_poll_time = 0.2
 
         frame = urwid.Frame(
             header=self._status_display,
@@ -432,6 +392,12 @@ class GrblCon:
         self._log_info('Closing GRBL Connection')
         self._close_serial()
 
+    def _handle_readadc(self, *args):  # pylint: disable=unused-argument
+        if not self.connected:
+            return
+
+        self._write('|')
+
     def _handle_reset(self, *args):  # pylint: disable=unused-argument
         if not self.connected:
             return
@@ -510,7 +476,7 @@ class GrblCon:
         :rtype: None
 
         """
-        # rip out the tag delimiters
+        # rip out the tag delmiters
         line = line.strip('<>')
 
         # Split the line into discrete sections
@@ -522,21 +488,6 @@ class GrblCon:
         self._status.mach_positions = Positions(m_pos)
         self._status.work_positions = Positions(w_pos)
 
-    def _process_adc(self, line):
-        """Handles incoming ADC values
-        
-        :param line: a string containing ADC values
-        :returns: None
-        :rtype: None
-
-        """
-        # remove tag delimiters
-        line = line.strip('|')     
-
-#        self.x, self.y, self.z, self.c, self.force, self.revdiv = [
-#            float(x) for x in adc_string.split(':')
-#        ]
-        self._status.adcs = ADCs(line)
     def _process_limit_flags(self, line):
         """Handles incoming limit flag information
 
@@ -594,8 +545,6 @@ class GrblCon:
                 self._process_realtime_state(line)
             elif line.startswith('/'):  # Limit pin state
                 self._process_limit_flags(line)
-            elif line.startswith('|'): # ADCs state
-                self._process_adc(line)
             else:
                 filtered = False
                 self._update_text_display(line)
@@ -654,11 +603,6 @@ class GrblCon:
                 self._serial_thread.start()
             except (serial.serialutil.SerialException, FileNotFoundError):
                 self._log_crit("Unable to open port: {}".format(portstr))
-    
-    def poll_adcs(self,*args):
-        if self.connected:
-          self._write('|')
-        self.loop.set_alarm_in(self.adc_poll_time, self.poll_adcs)
 
     def run(self):
         """Starts the main urwid loop and does not return
@@ -667,8 +611,8 @@ class GrblCon:
         :rtype: None
 
         """
-        self.loop.set_alarm_in(self.adc_poll_time, self.poll_adcs)
         self.loop.run()
 
 if __name__ == '__main__':
     GrblCon().run()
+

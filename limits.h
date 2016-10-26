@@ -28,6 +28,7 @@
 #define MAXFLAGLEN 40.0
 // Travel distance for the gripper from home is around 12 mm. Travel distane for gripping key is usually around 2-3 mm.
 #define MAXSERVODIST 12.0
+#define AXISLOCKSERVO 0x4
 
 typedef struct {
   uint8_t expected;
@@ -35,7 +36,6 @@ typedef struct {
   volatile uint8_t ishoming;
   volatile uint8_t isservoing;
   uint8_t mag_gap_check; //keyme specific
-  uint16_t bump_grip_force; //keyme specific: Value must be 0-1023
 } limit_t;
 
 extern limit_t limits;
@@ -56,5 +56,6 @@ void limits_soft_check(float *target);
 
 // Perform force servo cycle
 void limits_force_servo();
-
+float travel_servo;
 #endif
+

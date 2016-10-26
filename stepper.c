@@ -29,10 +29,8 @@
 #include "motion_control.h"
 #include "report.h"
 #include "magazine.h"
-#include "adc.h"
+#include "signals.h"
 #include "spi.h"
-
-#include "print.h" //TODO Remove; Debugging only
 
 // Some useful constants.
 #define DT_SEGMENT (1.0/(ACCELERATION_TICKS_PER_SECOND*60.0)) // min/segment
@@ -76,7 +74,7 @@ static const uint8_t stepper_init_registers[4][18] = {
   },
   {
     //YTABLE
-    0x0C, 0x11, // CTRL,   DTIME=11, ISGAIN=00, EXSTALL=0, MODE=0010, RSTEP=0, RDIR=0, ENBL=1	
+    0x0C, 0x11, // CTRL,   DTIME=11, ISGAIN=00, EXSTALL=0, MODE=0010, RSTEP=0, RDIR=0, ENBL=1   
     0x11, 0xFF, // TORQUE, SMPLTH=001, TORQUE=0xFF
     0x20, 0x30, // OFF,    PWMMODE=0, TOFF=0x30
     0x30, 0x80, // BLANK,  ABT=0, TBLANK=0x80
@@ -278,7 +276,7 @@ void st_wake_up()
   // Enable all stepper drivers.
   st_disable(false,~0);
 
-  if (sys.state & (STATE_CYCLE | STATE_HOMING | STATE_FORCESERVO)) {
+  if (sys.state & (STATE_CYCLE | STATE_HOMING)){
     // Initialize stepper output bits
     st.dir_outbits = settings.dir_invert_mask;
     st.step_outbits = settings.step_invert_mask;
@@ -313,7 +311,7 @@ void st_go_idle()
     // stop and not drift from residual inertial forces at the end of the last movement.
   bool do_disable = false; // Keep enabled.
   uint8_t mask = ~0; //all axes
-  if ((sys.state != STATE_HOMING) && (sys.state != STATE_FORCESERVO)) {
+  if ((sys.state != STATE_HOMING)){// && (sys.state != STATE_FORCESERVO)) {
     if (bit_istrue(SYS_EXEC, EXEC_ALARM)) {
       do_disable = true;  //disable all on alarm.
     }
@@ -337,8 +335,7 @@ void st_check_disable() {
 }
 
 //Called from ISR(TIMER4_COMPA_vect) - needs to be very efficient 
-void st_limit_check()
-{
+void st_limit_check(){
   // While homing or if hard limits enabled
 
   // Limit checking performed here
@@ -353,7 +350,7 @@ void st_limit_check()
   // axis should stop
 
   //Disable magazine gap checking if carousel has finished homing, but other axes are still homing
-  if (!(limits.ishoming & (1 << C_AXIS)) && limits.ishoming) {
+  if( !(limits.ishoming & (1 << C_AXIS)) && limits.ishoming){
     limits.mag_gap_check = 0 ;
   }
   
@@ -366,44 +363,20 @@ void st_limit_check()
       request_report(REQUEST_STATUS_REPORT|REQUEST_LIMIT_REPORT,LINENUMBER_EMPTY_BLOCK);
   } else { 
     bit_true(sys.state, STATE_HOME_ADJUST);
+
   }
 
     //if limits made but not homing , servoing, or alarmed already: critical alarm.
-    if (!(sys.state & (STATE_ALARM|STATE_HOMING)) && !(sys.state & (STATE_ALARM|STATE_FORCESERVO)) &&
+    if ( !(sys.state & (STATE_ALARM|STATE_HOMING)) && !(sys.state & (STATE_ALARM|STATE_FORCESERVO)) &&
          bit_isfalse(SYS_EXEC,EXEC_ALARM)) {
       mc_reset(); // Initiate system kill.
       // Indicate hard limit critical event, print limits
       sys.alarm |= ALARM_HARD_LIMIT;
       request_report(REQUEST_LIMIT_REPORT, (EXEC_ALARM | EXEC_CRIT_EVENT));
     }
-  } 
-}
-
-//Called from ISR(TIMER4_COMPA_vect) - needs to be very efficient 
-void st_force_check()
-{
-  // This checks if the desired force value is met before bumping a key.
-  // Once the desired value is reached, the gripper motor will stop.
-  // Threshold Value can be tweaked for desired target force value
-  
-  int16_t delta = analog_voltage_readings[FORCE_VALUE_INDEX][N_FILTER] - limits.bump_grip_force;
-  if (abs(delta) <= GRIPPER_FORCE_THRESHOLD) {
-    limits.isservoing = 0;
-    request_report(REQUEST_STATUS_REPORT | REQUEST_LIMIT_REPORT, LINENUMBER_EMPTY_BLOCK);    
   }
-  // The next two conditionals check if the gripper motor went past the force threshold.
-  // This could happen if the motor moves too quickly or if the voltage is not checked
-  // often enough.
-  //else if ((travel_servo > 0) && (delta > GRIPPER_FORCE_THRESHOLD)){
-    // Situation: Closing the gripper, but we skip past the threshold.
-    //limits.isservoing = 0;
-    //request_report(REQUEST_STATUS_REPORT|REQUEST_LIMIT_REPORT,LINENUMBER_EMPTY_BLOCK);
-  //}
-  //else if ((travel_servo<0) && (delta<-GRIPPER_FORCE_THRESHOLD)){
-    // Situation: Opening the gripper, but we skip past the threshold.
- //   limits.isservoing = 0;
-   // request_report(REQUEST_STATUS_REPORT|REQUEST_LIMIT_REPORT,LINENUMBER_EMPTY_BLOCK);
-  //}
+
+ 
 }
 
 /* "The Stepper Driver Interrupt" - This timer interrupt is the workhorse of Grbl. Grbl employs
@@ -506,7 +479,7 @@ ISR(TIMER4_COMPA_vect)
         st.counter_x = (st.exec_block->step_event_count >> 1);
         st.counter_y = st.counter_x;
         st.counter_z = st.counter_x;
-        st.counter_c = st.counter_x;
+                  st.counter_c = st.counter_x;
       }
 
       st.dir_outbits = st.exec_block->direction_bits ^ settings.dir_invert_mask;
@@ -517,8 +490,8 @@ ISR(TIMER4_COMPA_vect)
         st.steps[Y_AXIS] = st.exec_block->steps[Y_AXIS] >> st.exec_segment->amass_level;
         st.steps[Z_AXIS] = st.exec_block->steps[Z_AXIS] >> st.exec_segment->amass_level;
         st.steps[C_AXIS] = st.exec_block->steps[C_AXIS] >> st.exec_segment->amass_level;
-      #else
-        st.steps = st.exec_block->steps;
+                #else
+                  st.steps = st.exec_block->steps;
       #endif
 
 
@@ -578,10 +551,30 @@ ISR(TIMER4_COMPA_vect)
     else { sys.position[C_AXIS]++; }
   }
 
-  st_limit_check(); //Check for limits, including homing limits
+  st_limit_check(); //Check for limits
 
-  if (limits.isservoing) {
-    st_force_check();
+  // This checks if desired force value is met while bumping key.
+  // Once value is reached, gripper motor will stop.
+  // Threshold Value can be tweaked for desired target force value
+  int16_t error = (int16_t)analog_voltage_readings[FORCE_VALUE_INDEX] - (int16_t)force_target_val;
+  if (limits.isservoing){
+    if (abs(error)<=GRIPPER_FORCE_THRESHOLD){ //check if force servoing is active
+      limits.isservoing = 0;
+      request_report(REQUEST_STATUS_REPORT|REQUEST_LIMIT_REPORT,LINENUMBER_EMPTY_BLOCK);
+    }
+    // The next two conditionals check if the gripper motor went past the force threshold.
+    // This could happen if the motor moves too quickly or if the voltage is not checked
+    // often enough.
+    else if ((travel_servo>0) && (error>GRIPPER_FORCE_THRESHOLD)){
+      // Situation: Closing the gripper, but we skip past the threshold.
+      limits.isservoing = 0;
+      request_report(REQUEST_STATUS_REPORT|REQUEST_LIMIT_REPORT,LINENUMBER_EMPTY_BLOCK);
+    }
+    else if ((travel_servo<0) && (error<-GRIPPER_FORCE_THRESHOLD)){
+      // Situation: Opening the gripper, but we skip past the threshold.
+      limits.isservoing = 0;
+      request_report(REQUEST_STATUS_REPORT|REQUEST_LIMIT_REPORT,LINENUMBER_EMPTY_BLOCK);
+    }
   }
 
   st.step_count--; // Decrement step events count
@@ -1233,3 +1226,4 @@ void st_prep_buffer()
      we know when the plan is feasible in the context of what's already in the code and not
      require too much more code?
 */
+

@@ -27,9 +27,8 @@
 #include "motion_control.h"
 #include "limits.h"
 #include "report.h"
+#include "signals.h"
 #include "magazine.h"
-#include "adc.h"
-#include "print.h" //TODO Remove; Debug only
 
 #define HOMING_AXIS_SEARCH_SCALAR  1.1  // Axis search distance multiplier. Must be > 1.
 
@@ -66,8 +65,7 @@ void limits_init()
 
 
 //Resets enable state
-void limits_configure()
-{
+void limits_configure(){
   if (bit_istrue(settings.flags,BITFLAG_HARD_LIMIT_ENABLE)) {
     limits_enable(LIMIT_MASK & HARDSTOP_MASK,0);
   } else {
@@ -75,14 +73,15 @@ void limits_configure()
   }
 }
 
-void limits_enable(uint8_t axes, uint8_t expected) 
-{
+
+void limits_enable(uint8_t axes, uint8_t expected) {
   //    LIMIT_PCMSK |= LIMIT_MASK; // Enable specific pins of the Pin Change Interrupt
   limits.expected = bit_istrue(settings.flags,BITFLAG_INVERT_LIMIT_PINS)?~expected:expected;
   limits.active = axes<<LIMIT_BIT_SHIFT;
   limits.mag_gap_check = settings.mag_gap_enabled;
   memcpy(sys.probe_position, sys.position, sizeof(float) * N_AXIS);
 }
+
 
 void limits_disable()
 {
@@ -337,43 +336,37 @@ void limits_soft_check(float *target)
 // for bumping. Future iterations may want to include a specific force to reach in order to
 // do any force related movements. More motor motions may be added to reach the desired force
 // more accurately.
-void limits_force_servo()
-{
-  if (sys.abort) {
-    return;
-  } // Block if system reset has been issued.
+void limits_force_servo(){
+  if (sys.abort) { return; } // Block if system reset has been issued.
 
   limits.mag_gap_check = 0; // Do not look for gaps in magazine on carousel
 
-  float travel = 0;
-  float servo_rate = 0;
-  
+  uint16_t bump_target_force = force_target_val; // This is the input target force sensor value
+  float servo_rate;
   // Initialize homing in search mode to quickly engage the specified cycle_mask limit switches.
   uint8_t approach = ~0;
 
-  if (analog_voltage_readings[FORCE_VALUE_INDEX][N_FILTER] < (limits.bump_grip_force - GRIPPER_FORCE_THRESHOLD)) {
-    travel = MAXSERVODIST;
+  if (analog_voltage_readings[FORCE_VALUE_INDEX]<(bump_target_force-GRIPPER_FORCE_THRESHOLD)){
+    travel_servo = MAXSERVODIST;
   }
-  else if(analog_voltage_readings[FORCE_VALUE_INDEX][N_FILTER] > (limits.bump_grip_force + GRIPPER_FORCE_THRESHOLD)) {
-    travel = -(MAXSERVODIST);
+  else if(analog_voltage_readings[FORCE_VALUE_INDEX]>(bump_target_force+GRIPPER_FORCE_THRESHOLD)){
+    travel_servo = -MAXSERVODIST;
   }
   //approach has all bits set (negative dir) or none (positive)
   float target[N_AXIS];
   
-  uint8_t axislock = 1 << Z_AXIS;
-  servo_rate = settings.homing_seek_rate[Z_AXIS]; // TODO: make servo_rate into macro for servoing
-  
+  uint8_t axislock = AXISLOCKSERVO;
+  servo_rate = settings.homing_seek_rate[X_AXIS]/20.0; // TODO: make servo_rate into macro for servoing
   plan_reset();
 
-  // Set target for axes
+  // set target for moving axes based on direction
   target[X_AXIS] = 0;
   target[Y_AXIS] = 0;
-  target[Z_AXIS] = travel;
+  target[Z_AXIS] = travel_servo;
   target[C_AXIS] = 0;
 
   // Perform homing cycle. Planner buffer should be empty, as required to initiate the homing cycle.
-  //plan_buffer_line(target, servo_rate, false, LINENUMBER_SPECIAL_SERVO|(servo_line_number*4+LINEMASK_ON_EDGE)); 
-  plan_buffer_line(target, servo_rate, false, LINENUMBER_EMPTY_BLOCK); 
+  plan_buffer_line(target, servo_rate, false, LINENUMBER_SPECIAL_SERVO|(servo_line_number*4+LINEMASK_ON_EDGE)); 
 
   // axislock bit is high if axis is homing, so we only enable checking on moving axes.
   limits_enable(axislock,~approach);  //expect 0 on approach (stop when 1). vice versa for pulloff
@@ -383,16 +376,13 @@ void limits_force_servo()
   st_wake_up(); // Initiate motion
 
   do {
-    //st_prep_buffer(); // Check and prep segment buffer. NOTE: Should take no longer than 200us.
+    st_prep_buffer(); // Check and prep segment buffer. NOTE: Should take no longer than 200us.
     // Check only for user reset. Keyme: fixed to allow protocol_execute_runtime() in this loop.
     protocol_execute_runtime();
     if (SYS_EXEC & EXEC_RESET) {
       protocol_execute_runtime();
       return;
     }
-
-    // Update force ADC reading
-    calculate_force_voltage(); // In report.c 
 
     // Check if we never reached limit switch.  call it a Probe fail.
     if (SYS_EXEC & EXEC_CYCLE_STOP) {
@@ -419,3 +409,4 @@ void limits_force_servo()
   limits.mag_gap_check = settings.mag_gap_enabled; // Start checking magazine gaps on carousel again
 }
 /* KEYME SPECIFIC END */
+

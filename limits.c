@@ -196,6 +196,12 @@ void limits_go_home(uint8_t cycle_mask)
     limits_plan_homing(cycle_mask, homing_rate, max_travel, axislock, approach, target, flipped);
 
     do {
+      
+      if(settings.mag_gap_enabled) {
+        // Monitor magazine probe to look for missing magazines on carousel
+        magazine_gap_monitor();
+      }
+
       // If the home speed needs to be adjusted when an axis finishes homing,
       // calculate new homing values and reset the plan buffer
       if (bit_istrue(sys.state, STATE_HOME_ADJUST)) {

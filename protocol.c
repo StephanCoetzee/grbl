@@ -29,6 +29,7 @@
 #include "motion_control.h"
 #include "report.h"
 #include "progman.h"
+#include "systick.h"
 
 #define STATUS_REPORT_RATE_MS 333  //3 Hz
 
@@ -153,8 +154,11 @@ void protocol_execute_runtime()
   uint8_t rt_exec = SYS_EXEC; // Copy to avoid calling volatile multiple times
   uint32_t clock = masterclock;
 
-  //Give the program manager some time to manage the serial traffic
+  // Give the program manager some time to manage the serial traffic
   progman_execute();
+
+  // Service SysTick Callbacks
+  systick_service_callbacks();
   
   if (clock >= (report_clock +  STATUS_REPORT_RATE_MS) || clock < report_clock) {
     rt_exec|= EXEC_RUNTIME_REPORT;

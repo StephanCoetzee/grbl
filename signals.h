@@ -13,6 +13,7 @@
 #include "system.h"
 
 #define N_FILTER 3
+#define SIGNALS_CALLBACK_INTERVAL 20
 
 // Array of latest ADC readings
 uint16_t analog_voltage_readings[VOLTAGE_SENSOR_COUNT];  // Filtered ADC readings
@@ -24,6 +25,7 @@ uint16_t analog_voltage_readings_x[VOLTAGE_SENSOR_COUNT][N_FILTER + 1];  // Unfi
 void signals_update_motors();
 void signals_update_force();
 void signals_update_revision();
+void signals_callback();
 
 #endif
 

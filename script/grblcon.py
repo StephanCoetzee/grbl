@@ -615,4 +615,3 @@ class GrblCon:
 
 if __name__ == '__main__':
     GrblCon().run()
-

@@ -58,4 +58,3 @@ void limits_soft_check(float *target);
 void limits_force_servo();
 float travel_servo;
 #endif
-

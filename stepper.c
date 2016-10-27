@@ -74,7 +74,7 @@ static const uint8_t stepper_init_registers[4][18] = {
   },
   {
     //YTABLE
-    0x0C, 0x11, // CTRL,   DTIME=11, ISGAIN=00, EXSTALL=0, MODE=0010, RSTEP=0, RDIR=0, ENBL=1   
+    0x0C, 0x11, // CTRL,   DTIME=11, ISGAIN=00, EXSTALL=0, MODE=0010, RSTEP=0, RDIR=0, ENBL=1  
     0x11, 0xFF, // TORQUE, SMPLTH=001, TORQUE=0xFF
     0x20, 0x30, // OFF,    PWMMODE=0, TOFF=0x30
     0x30, 0x80, // BLANK,  ABT=0, TBLANK=0x80

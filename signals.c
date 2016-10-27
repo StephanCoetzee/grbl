@@ -9,6 +9,7 @@
 
 #include "signals.h"
 #include "adc.h"
+#include "systick.h"
 
 // Updates motors ADC readings
 void signals_update_motors()
@@ -23,6 +24,13 @@ void signals_update_motors()
   }
 }
 
+void signals_callback()
+{
+  signals_update_motors();
+  signals_update_force();
+  // Register callback to this function in SIGNALS_CALLBACK_INTERVAL milliseconds
+  systick_register_callback(SIGNALS_CALLBACK_INTERVAL, signals_callback);
+}
 
 // Filter and update force ADC reading
 void signals_update_force()

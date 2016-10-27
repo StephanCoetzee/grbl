@@ -26,6 +26,6 @@ void signals_update_motors();
 void signals_update_force();
 void signals_update_revision();
 void signals_callback();
-
+void print_second();
 #endif
 

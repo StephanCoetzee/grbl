@@ -99,7 +99,7 @@ int main(void)
     systick_init();  // Init systick and systick callbacks
 
     // Register first signals update callback
-    systick_register_callback(SIGNALS_CALLBACK_INTERVAL, signals_callback);
+    systick_register_callback(1000, signals_callback); // Start polling ADCs a second after init
 
     // Read revision voltage from revision voltage divider
     // This ADC is not read continuously

@@ -193,7 +193,7 @@ void protocol_execute_runtime()
           // limits. While the position is not lost, the incoming
           // stream could be still engaged and cause a serious crash
           // if it continues afterwards.
-	  progman_execute();
+          progman_execute();
         } while (bit_isfalse(SYS_EXEC,EXEC_RESET));
       }
       bit_false(SYS_EXEC,(EXEC_ALARM | EXEC_CRIT_EVENT));

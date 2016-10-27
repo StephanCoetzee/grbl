@@ -11,6 +11,8 @@
 #include "adc.h"
 #include "systick.h"
 
+uint16_t analog_voltage_readings_x[VOLTAGE_SENSOR_COUNT][N_FILTER + 1];  // Unfiltered ADC readings
+
 // Updates motors ADC readings
 void signals_update_motors()
 {
@@ -22,14 +24,6 @@ void signals_update_motors()
     // map should be made to motors to ADC channels.
       analog_voltage_readings[idx] = adc_read_channel(idx);
   }
-}
-
-void signals_callback()
-{
-  signals_update_motors();
-  signals_update_force();
-  // Register callback to this function in SIGNALS_CALLBACK_INTERVAL milliseconds
-  systick_register_callback(SIGNALS_CALLBACK_INTERVAL, signals_callback);
 }
 
 // Filter and update force ADC reading
@@ -50,11 +44,19 @@ void signals_update_force()
     + (2 * analog_voltage_readings_x[FORCE_VALUE_INDEX][N_FILTER - 1]) 
     + analog_voltage_readings_x[FORCE_VALUE_INDEX][N_FILTER] ));
 
-    // Advance all values in the filtered and unfiltered arrays
+    // Advance all values in the unfiltered array
     uint8_t idx;
     for (idx = 0; idx < N_FILTER; idx++) {
       analog_voltage_readings_x[FORCE_VALUE_INDEX][idx] = analog_voltage_readings_x[FORCE_VALUE_INDEX][idx + 1];
     } 
+}
+
+void signals_callback()
+{
+  signals_update_motors();
+  signals_update_force();
+  // Register callback to this function in SIGNALS_CALLBACK_INTERVAL milliseconds
+  systick_register_callback(SIGNALS_CALLBACK_INTERVAL, signals_callback);
 }
 
 // Read value from revision voltage divider

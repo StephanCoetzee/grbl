@@ -35,7 +35,8 @@ typedef struct {
   uint8_t active;
   volatile uint8_t ishoming;
   volatile uint8_t isservoing;
-  uint8_t mag_gap_check; //keyme specific
+  uint8_t mag_gap_check;  // KeyMe specific
+  uint16_t bump_grip_force;  // KeyMe specific: Value must be 0-1023
 } limit_t;
 
 extern limit_t limits;
@@ -56,5 +57,5 @@ void limits_soft_check(float *target);
 
 // Perform force servo cycle
 void limits_force_servo();
-float travel_servo;
+
 #endif

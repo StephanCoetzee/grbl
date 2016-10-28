@@ -65,7 +65,8 @@ void limits_init()
 
 
 //Resets enable state
-void limits_configure(){
+void limits_configure()
+{
   if (bit_istrue(settings.flags,BITFLAG_HARD_LIMIT_ENABLE)) {
     limits_enable(LIMIT_MASK & HARDSTOP_MASK,0);
   } else {
@@ -74,7 +75,8 @@ void limits_configure(){
 }
 
 
-void limits_enable(uint8_t axes, uint8_t expected) {
+void limits_enable(uint8_t axes, uint8_t expected)
+{
   //    LIMIT_PCMSK |= LIMIT_MASK; // Enable specific pins of the Pin Change Interrupt
   limits.expected = bit_istrue(settings.flags,BITFLAG_INVERT_LIMIT_PINS)?~expected:expected;
   limits.active = axes<<LIMIT_BIT_SHIFT;
@@ -337,36 +339,39 @@ void limits_soft_check(float *target)
 // do any force related movements. More motor motions may be added to reach the desired force
 // more accurately.
 void limits_force_servo(){
-  if (sys.abort) { return; } // Block if system reset has been issued.
+  if (sys.abort) { 
+    return; 
+  } // Block if system reset has been issued.
 
   limits.mag_gap_check = 0; // Do not look for gaps in magazine on carousel
 
-  uint16_t bump_target_force = force_target_val; // This is the input target force sensor value
-  float servo_rate;
+  float travel = 0;
+  float servo_rate = 0;
+
   // Initialize homing in search mode to quickly engage the specified cycle_mask limit switches.
   uint8_t approach = ~0;
 
-  if (analog_voltage_readings[FORCE_VALUE_INDEX]<(bump_target_force-GRIPPER_FORCE_THRESHOLD)){
-    travel_servo = MAXSERVODIST;
+  if (analog_voltage_readings[FORCE_VALUE_INDEX] < (limits.bump_grip_force - GRIPPER_FORCE_THRESHOLD)){
+    travel = MAXSERVODIST;
   }
-  else if(analog_voltage_readings[FORCE_VALUE_INDEX]>(bump_target_force+GRIPPER_FORCE_THRESHOLD)){
-    travel_servo = -MAXSERVODIST;
+  else if(analog_voltage_readings[FORCE_VALUE_INDEX] > (limits.bump_grip_force + GRIPPER_FORCE_THRESHOLD)){
+    travel = -MAXSERVODIST;
   }
   //approach has all bits set (negative dir) or none (positive)
   float target[N_AXIS];
   
-  uint8_t axislock = AXISLOCKSERVO;
-  servo_rate = settings.homing_seek_rate[X_AXIS]/20.0; // TODO: make servo_rate into macro for servoing
+  uint8_t axislock = 1 << Z_AXIS;
+  servo_rate = settings.homing_seek_rate[X_AXIS]; // TODO: make servo_rate into macro for servoing
   plan_reset();
 
-  // set target for moving axes based on direction
+  // Set target axes
   target[X_AXIS] = 0;
   target[Y_AXIS] = 0;
-  target[Z_AXIS] = travel_servo;
+  target[Z_AXIS] = travel;
   target[C_AXIS] = 0;
 
   // Perform homing cycle. Planner buffer should be empty, as required to initiate the homing cycle.
-  plan_buffer_line(target, servo_rate, false, LINENUMBER_SPECIAL_SERVO|(servo_line_number*4+LINEMASK_ON_EDGE)); 
+  plan_buffer_line(target, servo_rate, false, LINENUMBER_EMPTY_BLOCK); 
 
   // axislock bit is high if axis is homing, so we only enable checking on moving axes.
   limits_enable(axislock,~approach);  //expect 0 on approach (stop when 1). vice versa for pulloff

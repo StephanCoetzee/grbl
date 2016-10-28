@@ -28,7 +28,7 @@
 #include "protocol.h"
 #include "stepper.h"
 #include "planner.h"
-
+#include "limits.h"
 
 uint32_t masterclock=0;
 //uint16_t voltage_result[VOLTAGE_SENSOR_COUNT];
@@ -297,13 +297,25 @@ uint8_t system_execute_line(char *line)
           break;
         case 'F': // Perform Force servo process. By default it is defined for Gripper-Axis(Z) only.
           char_counter++;
-          read_float(line, &char_counter, &value);
-          // This is the force value the gripper motor will approach. Specified by kiosk.
-          force_target_val = (uint16_t)value;
-          mc_force_servo_cycle();
+          if (line[char_counter] == 'S') {
+            char_counter++;         
+            if (!read_float(line, &char_counter, &value)){
+              return(STATUS_BAD_NUMBER_FORMAT);
+            }
+
+            // Set the force at which the gripper grips when the $F
+            // command is sent - used for bumping the key.
+            limits.bump_grip_force = (uint16_t)value;
+
+          } else if (line[char_counter] == 0) {
+            mc_force_servo_cycle(); 
+          } else {
+            return(STATUS_INVALID_STATEMENT);    
+          }
+          
           if (!sys.abort) { system_execute_startup(line);}
           return STATUS_QUIET_OK;
-          break;
+          break;        
         case 'I' : // Print or store build info. [IDLE/ALARM]
           if ( line[++char_counter] == 0 ) {
             if (!(settings_read_build_info(line))) {

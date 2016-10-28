@@ -41,7 +41,6 @@
 #include "nuts_bolts.h"
 
 
-
 // Define system executor bit map. Used internally by runtime protocol as runtime command flags,
 // which notifies the main program to execute the specified runtime command asynchronously.
 // NOTE: The system executor uses an unsigned 8-bit volatile variable (8 flag limit.) The default
@@ -54,7 +53,6 @@
 #define EXEC_RESET          bit(4) // bitmask 00010000
 #define EXEC_ALARM          bit(5) // bitmask 00100000
 #define EXEC_CRIT_EVENT     bit(6) // bitmask 01000000
-//
 
 #define REQUEST_STATUS_REPORT  bit(0)
 #define REQUEST_LIMIT_REPORT   bit(1)
@@ -87,8 +85,6 @@
 // Define system flags
 #define SYSFLAG_EOL_REPORT bit(0)  // Block is done executing, report linenum
 #define SYSFLAG_AUTOSTART  bit(1)  // autostart is active
-
-uint16_t force_target_val;
 
 // Define global system variables
 typedef struct {

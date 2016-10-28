@@ -276,7 +276,7 @@ void st_wake_up()
   // Enable all stepper drivers.
   st_disable(false,~0);
 
-  if (sys.state & (STATE_CYCLE | STATE_HOMING)){
+  if (sys.state & (STATE_CYCLE | STATE_HOMING | STATE_FORCESERVO)){
     // Initialize stepper output bits
     st.dir_outbits = settings.dir_invert_mask;
     st.step_outbits = settings.step_invert_mask;
@@ -311,13 +311,12 @@ void st_go_idle()
     // stop and not drift from residual inertial forces at the end of the last movement.
   bool do_disable = false; // Keep enabled.
   uint8_t mask = ~0; //all axes
-  if ((sys.state != STATE_HOMING)){// && (sys.state != STATE_FORCESERVO)) {
+  if ((sys.state != STATE_HOMING) && (sys.state != STATE_FORCESERVO)) {
     if (bit_istrue(SYS_EXEC, EXEC_ALARM)) {
       do_disable = true;  //disable all on alarm.
-    }
-    else if (settings.stepper_idle_lock_time != 0xff) { //else not always on
-      st_shutdown_delay = settings.stepper_idle_lock_time*STEPPERS_LOCK_TIME_MULTIPLE;
-      st_shutdown_start = masterclock|1; //use nearest odd number to handle rare case of mc==0
+    } else if (settings.stepper_idle_lock_time != 0xff) { //else not always on
+      st_shutdown_delay = settings.stepper_idle_lock_time * STEPPERS_LOCK_TIME_MULTIPLE;
+      st_shutdown_start = masterclock | 1; //use nearest odd number to handle rare case of mc==0
 
       delay_ms(settings.stepper_idle_lock_time);
       do_disable = true;  //disable most axes now.
@@ -335,7 +334,8 @@ void st_check_disable() {
 }
 
 //Called from ISR(TIMER4_COMPA_vect) - needs to be very efficient 
-void st_limit_check(){
+void st_limit_check()
+{
   // While homing or if hard limits enabled
 
   // Limit checking performed here
@@ -366,8 +366,8 @@ void st_limit_check(){
 
   }
 
-    //if limits made but not homing , servoing, or alarmed already: critical alarm.
-    if ( !(sys.state & (STATE_ALARM|STATE_HOMING)) && !(sys.state & (STATE_ALARM|STATE_FORCESERVO)) &&
+    //If limits made but not homing , servoing, or alarmed already: critical alarm.
+    if (!(sys.state & (STATE_ALARM | STATE_HOMING)) && !(sys.state & (STATE_ALARM | STATE_FORCESERVO)) &&
          bit_isfalse(SYS_EXEC,EXEC_ALARM)) {
       mc_reset(); // Initiate system kill.
       // Indicate hard limit critical event, print limits
@@ -375,8 +375,33 @@ void st_limit_check(){
       request_report(REQUEST_LIMIT_REPORT, (EXEC_ALARM | EXEC_CRIT_EVENT));
     }
   }
+}
 
- 
+//Called from ISR(TIMER4_COMPA_vect) - needs to be very efficient 
+void st_force_check()
+{
+  // This checks if the desired force value is met before bumping a key.
+  // Once the desired value is reached, the gripper motor will stop.
+  // Threshold Value can be tweaked for desired target force value
+  
+  int16_t delta = analog_voltage_readings[FORCE_VALUE_INDEX] - limits.bump_grip_force;
+  if (abs(delta) <= GRIPPER_FORCE_THRESHOLD) {
+    limits.isservoing = 0;
+    request_report(REQUEST_STATUS_REPORT | REQUEST_LIMIT_REPORT, LINENUMBER_EMPTY_BLOCK);    
+  }
+  // The next two conditionals check if the gripper motor went past the force threshold.
+  // This could happen if the motor moves too quickly or if the voltage is not checked
+  // often enough.
+  //else if ((travel_servo > 0) && (delta > GRIPPER_FORCE_THRESHOLD)){
+    // Situation: Closing the gripper, but we skip past the threshold.
+    //limits.isservoing = 0;
+    //request_report(REQUEST_STATUS_REPORT|REQUEST_LIMIT_REPORT,LINENUMBER_EMPTY_BLOCK);
+  //}
+  //else if ((travel_servo<0) && (delta<-GRIPPER_FORCE_THRESHOLD)){
+    // Situation: Opening the gripper, but we skip past the threshold.
+ //   limits.isservoing = 0;
+   // request_report(REQUEST_STATUS_REPORT|REQUEST_LIMIT_REPORT,LINENUMBER_EMPTY_BLOCK);
+  //}
 }
 
 /* "The Stepper Driver Interrupt" - This timer interrupt is the workhorse of Grbl. Grbl employs
@@ -479,7 +504,7 @@ ISR(TIMER4_COMPA_vect)
         st.counter_x = (st.exec_block->step_event_count >> 1);
         st.counter_y = st.counter_x;
         st.counter_z = st.counter_x;
-                  st.counter_c = st.counter_x;
+        st.counter_c = st.counter_x;
       }
 
       st.dir_outbits = st.exec_block->direction_bits ^ settings.dir_invert_mask;
@@ -490,8 +515,8 @@ ISR(TIMER4_COMPA_vect)
         st.steps[Y_AXIS] = st.exec_block->steps[Y_AXIS] >> st.exec_segment->amass_level;
         st.steps[Z_AXIS] = st.exec_block->steps[Z_AXIS] >> st.exec_segment->amass_level;
         st.steps[C_AXIS] = st.exec_block->steps[C_AXIS] >> st.exec_segment->amass_level;
-                #else
-                  st.steps = st.exec_block->steps;
+      #else
+        st.steps = st.exec_block->steps;
       #endif
 
 
@@ -551,30 +576,10 @@ ISR(TIMER4_COMPA_vect)
     else { sys.position[C_AXIS]++; }
   }
 
-  st_limit_check(); //Check for limits
+  st_limit_check(); //Check for limitsi, including homing limits
 
-  // This checks if desired force value is met while bumping key.
-  // Once value is reached, gripper motor will stop.
-  // Threshold Value can be tweaked for desired target force value
-  int16_t error = (int16_t)analog_voltage_readings[FORCE_VALUE_INDEX] - (int16_t)force_target_val;
-  if (limits.isservoing){
-    if (abs(error)<=GRIPPER_FORCE_THRESHOLD){ //check if force servoing is active
-      limits.isservoing = 0;
-      request_report(REQUEST_STATUS_REPORT|REQUEST_LIMIT_REPORT,LINENUMBER_EMPTY_BLOCK);
-    }
-    // The next two conditionals check if the gripper motor went past the force threshold.
-    // This could happen if the motor moves too quickly or if the voltage is not checked
-    // often enough.
-    else if ((travel_servo>0) && (error>GRIPPER_FORCE_THRESHOLD)){
-      // Situation: Closing the gripper, but we skip past the threshold.
-      limits.isservoing = 0;
-      request_report(REQUEST_STATUS_REPORT|REQUEST_LIMIT_REPORT,LINENUMBER_EMPTY_BLOCK);
-    }
-    else if ((travel_servo<0) && (error<-GRIPPER_FORCE_THRESHOLD)){
-      // Situation: Opening the gripper, but we skip past the threshold.
-      limits.isservoing = 0;
-      request_report(REQUEST_STATUS_REPORT|REQUEST_LIMIT_REPORT,LINENUMBER_EMPTY_BLOCK);
-    }
+  if (limits.isservoing) {
+    st_force_check();
   }
 
   st.step_count--; // Decrement step events count

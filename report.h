@@ -100,7 +100,6 @@ void report_revision();
 // Prints recorded probe position
 void report_probe_parameters(uint8_t error);
 
-
 // Prints a message indicating probe failure
 void report_probe_fail();
 

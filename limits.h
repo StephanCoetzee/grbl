@@ -26,6 +26,7 @@
 // This is defined by the largest homing flag in the system. The Y flag is
 // the largest with a length of just under 40 mm.
 #define MAXFLAGLEN 40.0
+
 // Travel distance for the gripper from home is around 12 mm.
 // Travel distane for gripping key is usually around 2-3 mm.
 #define MAXSERVODIST 12.0

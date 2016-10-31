@@ -248,7 +248,7 @@ void mc_homing_cycle(uint8_t axis_mask)
   limits_configure();
 }
 
-// Wrapper function for force servoing. This mimics the homing cycle.
+// Wrapper function for limits_force_servo. This mimics the homing cycle.
 void mc_force_servo_cycle()
 {
   sys.state = STATE_FORCESERVO; // Set system state variable

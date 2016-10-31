@@ -52,7 +52,7 @@
 #define C_DIRECTION_BIT   7 // Atmega2560 pin 27 / Arduino Digital Pin xx
 #define DIRECTION_MASK ((1<<X_DIRECTION_BIT)|(1<<Y_DIRECTION_BIT)|(1<<Z_DIRECTION_BIT)|(1<<C_DIRECTION_BIT)) // All direction bits
 
-          // Define stepper driver enable/disable output pin.
+// Define stepper driver enable/disable output pin.
 #define STEPPERS_DISABLE_DDR   DDRJ
 #define STEPPERS_DISABLE_PORT  PORTJ
 #define X_DISABLE_BIT 2  // J2 / Atmega Pin 65

@@ -30,9 +30,6 @@
 #include "report.h"
 #include "magazine.h"
 #include "spi.h"
-//*rm*
-  #include "print.h"
-//*rm*
 
 // Some useful constants.
 #define DT_SEGMENT (1.0/(ACCELERATION_TICKS_PER_SECOND*60.0)) // min/segment
@@ -386,15 +383,33 @@ void st_force_check()
 {
   // This checks if the desired force value is met before bumping a key.
   // Once the desired value is reached, the gripper motor will stop.
-  // Threshold Value can be tweaked for desired target force value
+  
+  //calculate_force_voltage();
 
-   
-  int16_t delta = analog_voltage_readings[FORCE_VALUE_INDEX] - limits.bump_grip_force;
-  printInteger(limits.bump_grip_force);
-  if (abs(delta) <= GRIPPER_FORCE_THRESHOLD) {
-    limits.isservoing = 0;
-    request_report(REQUEST_STATUS_REPORT | REQUEST_LIMIT_REPORT, LINENUMBER_EMPTY_BLOCK);    
+  //If direction bit in direction mask is set, it means the direction is negative
+  if (st.dir_outbits & (1 << Z_DIRECTION_BIT)) {
+    // Gripper is moving in negative direction - stop when force
+    // is less than or equal to desired force
+    if (analog_voltage_readings[FORCE_VALUE_INDEX] >= limits.bump_grip_force) {
+      limits.isservoing = 0;
+      request_report(REQUEST_STATUS_REPORT | REQUEST_LIMIT_REPORT, LINENUMBER_EMPTY_BLOCK);    
+    }
+
+  } else {
+    // Gripper is moving in positive direction - stop when force
+    // is greater than or equal to desired force
+    if (analog_voltage_readings[FORCE_VALUE_INDEX] <= limits.bump_grip_force) {
+      limits.isservoing = 0;
+      request_report(REQUEST_STATUS_REPORT | REQUEST_LIMIT_REPORT, LINENUMBER_EMPTY_BLOCK);    
+    }
   }
+
+//  int16_t delta = analog_voltage_readings[FORCE_VALUE_INDEX] - limits.bump_grip_force;
+//  if (abs(delta) <= GRIPPER_FORCE_THRESHOLD) {
+//    limits.isservoing = 0;
+//    request_report(REQUEST_STATUS_REPORT | REQUEST_LIMIT_REPORT, LINENUMBER_EMPTY_BLOCK);    
+//  }
+
   // The next two conditionals check if the gripper motor went past the force threshold.
   // This could happen if the motor moves too quickly or if the voltage is not checked
   // often enough.

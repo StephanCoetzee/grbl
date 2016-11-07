@@ -8,8 +8,8 @@
  
 */
 
-#ifndef __SYSTICK_H
-#define __SYSTICK_H
+#ifndef SYSTICK_H
+#define SYSTICK_H
 
 #include "system.h"
 

@@ -1,4 +1,3 @@
-
 #include "system.h"
 #include "adc.h"
 #include "nuts_bolts.h"
@@ -98,5 +97,4 @@ void adc_init()
   sei(); 
 
 }
-
 

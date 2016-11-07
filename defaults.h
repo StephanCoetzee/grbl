@@ -24,8 +24,8 @@
    a good starting point as you get to know your machine and tweak the settings for your
    our nefarious needs. */
 
-#ifndef defaults_h
-#define defaults_h
+#ifndef DEFAULTS_H
+#define DEFAULTS_H
 
 #ifdef DEFAULTS_GENERIC
   // Grbl generic default settings. Should work across different machines.

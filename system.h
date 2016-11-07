@@ -18,8 +18,8 @@
   along with Grbl.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef system_h
-#define system_h
+#ifndef SYSTEM_H
+#define SYSTEM_H
 
 // Define system header files and standard libraries used by Grbl
 #include <avr/io.h>

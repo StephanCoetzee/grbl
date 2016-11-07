@@ -19,8 +19,8 @@
   along with Grbl.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef settings_h
-#define settings_h
+#ifndef SETTINGS_H
+#define SETTINGS_H
 
 #include "system.h"
 

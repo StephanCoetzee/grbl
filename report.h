@@ -17,8 +17,8 @@
   You should have received a copy of the GNU General Public License
   along with Grbl.  If not, see <http://www.gnu.org/licenses/>.
 */
-#ifndef report_h
-#define report_h
+#ifndef REPORT_H
+#define REPORT_H
 
 // Define Grbl status codes.
 #define STATUS_OK 0

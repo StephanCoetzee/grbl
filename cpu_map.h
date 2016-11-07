@@ -25,8 +25,8 @@
 // NOTE: This is still a work in progress. We are still centralizing the configurations to
 // this file, so your success may vary for other CPUs.
 
-#ifndef cpu_map_h
-#define cpu_map_h 
+#ifndef CPU_MAP_H
+#define CPU_MAP_H 
 
 //----------------------------------------------------------------------------------------
 

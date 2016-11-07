@@ -2,8 +2,8 @@
   Not part of GRBL, KeyMe specific
 */
 
-#ifndef _SPI_H_
-#define _SPI_H_
+#ifndef SPI_H
+#define SPI_H
 
 #include <avr/io.h>
 #include "system.h"

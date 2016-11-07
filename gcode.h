@@ -19,8 +19,8 @@
   along with Grbl.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef gcode_h
-#define gcode_h
+#ifndef GCODE_H
+#define GCODE_H
 
 #include "system.h"
 

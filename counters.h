@@ -18,8 +18,8 @@
   along with Grbl.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef counters_h
-#define counters_h
+#ifndef COUNTERS_H
+#define COUNTERS_H
 
 typedef int32_t count_t;
 

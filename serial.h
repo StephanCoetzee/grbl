@@ -22,8 +22,8 @@
 /* This code was initially inspired by the wiring_serial module by David A. Mellis which
    used to be a part of the Arduino project. */
 
-#ifndef serial_h
-#define serial_h
+#ifndef SERIAL_H
+#define SERIAL_H
 
 
 #ifndef RX_BUFFER_SIZE

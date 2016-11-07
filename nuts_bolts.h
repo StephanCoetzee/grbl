@@ -19,8 +19,8 @@
   along with Grbl.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef nuts_bolts_h
-#define nuts_bolts_h
+#ifndef NUTS_BOLTS_H
+#define NUTS_BOLTS_H
 
 #define false 0
 #define true 1

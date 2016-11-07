@@ -2,8 +2,8 @@
   Not part of Grbl. KeyMe specific
 */
 
-#ifndef adc_h
-#define adc_h
+#ifndef ADC_H
+#define ADC_H
 
 typedef enum {
   X = 0,

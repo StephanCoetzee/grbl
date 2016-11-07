@@ -25,8 +25,8 @@
 
 // IMPORTANT: Any changes here requires a full re-compiling of the source code to propagate them.
 
-#ifndef config_h
-#define config_h
+#ifndef CONFIG_H
+#define CONFIG_H
 
 // Default settings. Used when resetting EEPROM. Change to desired name in defaults.h
 //#define DEFAULTS_GENERIC

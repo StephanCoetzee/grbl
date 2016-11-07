@@ -18,8 +18,8 @@
   along with Grbl.  If not, see <http://www.gnu.org/licenses/>.
 */
   
-#ifndef probe_h
-#define probe_h 
+#ifndef PROBE_H
+#define PROBE_H 
 
 // Values that define the probing state machine.  
 #define PROBE_OFF     0 // No probing. (Must be zero.)

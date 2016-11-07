@@ -7,8 +7,8 @@
   stored in the appropriate arrays.
 */
 
-#ifndef signals_h
-#define signals_h
+#ifndef SIGNALS_H
+#define SIGNALS_H
 
 #include "system.h"
 

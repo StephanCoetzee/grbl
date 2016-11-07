@@ -2,8 +2,8 @@
   Not part of Grbl. Written by KeyMe.
 */
 
-#ifndef magazine_h
-#define magazine_h
+#ifndef MAGAZINE_H
+#define MAGAZINE_H
 
 // Magazine allignment pin initialization routine
 void magazine_init();

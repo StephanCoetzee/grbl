@@ -1,5 +1,5 @@
-#ifndef eeprom_h
-#define eeprom_h
+#ifndef EEPROM_H
+#define EEPROM_H
 
 unsigned char eeprom_get_char(unsigned int addr);
 void eeprom_put_char(unsigned int addr, unsigned char new_value);

@@ -22,8 +22,8 @@
 /* This code was initially inspired by the wiring_serial module by David A. Mellis which
    used to be a part of the Arduino project. */ 
 
-#ifndef print_h
-#define print_h
+#ifndef PRINT_H
+#define PRINT_H
 
 void printString(const char *s);
 

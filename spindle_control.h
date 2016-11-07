@@ -19,8 +19,8 @@
   along with Grbl.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef spindle_control_h
-#define spindle_control_h 
+#ifndef SPINDLE_CONTROL_H
+#define SPINDLE_CONTROL_H 
 
 
 // Initializes spindle pins and hardware PWM, if enabled.

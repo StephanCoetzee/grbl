@@ -19,8 +19,8 @@
   along with Grbl.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef limits_h
-#define limits_h 
+#ifndef LIMITS_H
+#define LIMITS_H 
 
 // Largest possible distance to move during pulloff motion of homing.
 // This is defined by the largest homing flag in the system. The Y flag is

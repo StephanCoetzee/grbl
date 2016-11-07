@@ -18,8 +18,8 @@
   along with Grbl.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef coolant_control_h
-#define coolant_control_h 
+#ifndef COOLANT_CONTROL_H
+#define COOLANT_CONTROL_H 
 
 
 void coolant_init();

@@ -401,8 +401,12 @@ void st_force_check()
   const uint8_t positive_direction = bit_istrue(st.dir_outbits, (1 << Z_DIRECTION_BIT));
   const uint8_t positive_stop = (positive_direction && (FORCE_VAL >= limits.bump_grip_force));
   const uint8_t negative_stop = (!positive_direction && (FORCE_VAL <= limits.bump_grip_force));
-    
-  if (positive_stop || negative_stop) {
+
+  // If the maximum gripper position is reached before the desired force
+  // is reached. Finish servoing, withou throwing an alarm.
+  const bool max_reached = (sys.position[Z_AXIS] >= MAXSERVODIST);  
+
+  if (positive_stop || negative_stop || max_reached) {
     limits.isservoing = 0;
     request_report(REQUEST_STATUS_REPORT | REQUEST_LIMIT_REPORT, LINENUMBER_EMPTY_BLOCK);    
   }

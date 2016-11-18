@@ -29,6 +29,7 @@
 #include "gcode.h"
 #include "report.h"
 #include "motion_control.h"
+#include "print.h" // TODO: Remove; debug only
 
 #define PROBE_LINE_NUMBER (LINENUMBER_SPECIAL)
 struct probe_state probe;
@@ -44,6 +45,11 @@ static struct {
     .idx = MAG_SENSOR,
     .mask = MAGAZINE_ALIGNMENT_MASK,
     .in_port = &MAGAZINE_ALIGNMENT_PIN
+  },
+  {
+    .idx = KEY_SENSOR,
+    .mask = (1 << Z_LIMIT_BIT),
+    .in_port = &LIMIT_PIN
   }
 };
 
@@ -98,6 +104,8 @@ bool probe_loop()
   // from the stepper ISR to check if the active
   // probe is found.
   while (probe.isprobing) {
+    printString("Probing to sensor");
+    printInteger(probe.active_sensor);
     // Check for user reset and allow
     // protocol_execute_runtime to run in this loop 
     protocol_execute_runtime();
@@ -135,6 +143,8 @@ void probe_move_to_sensor(float * target, float feed_rate, uint8_t invert_feed_r
 {
   // Set the active probe
   probe.active_sensor = sensor;
+
+  report_debug_message("PROBE MOVE TO SENSOR");
 
   if (sys.state != STATE_CYCLE)
     protocol_auto_cycle_start();

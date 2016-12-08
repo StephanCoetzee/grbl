@@ -17,7 +17,6 @@
   You should have received a copy of the GNU General Public License
   along with Grbl.  If not, see <http://www.gnu.org/licenses/>.
 */
-  
 #include "system.h"
 #include "probe.h"
 #include "counters.h"
@@ -29,7 +28,6 @@
 #include "gcode.h"
 #include "report.h"
 #include "motion_control.h"
-#include "print.h" // TODO: Remove; debug only
 
 #define PROBE_LINE_NUMBER (LINENUMBER_SPECIAL)
 struct probe_state probe;
@@ -104,8 +102,6 @@ bool probe_loop()
   // from the stepper ISR to check if the active
   // probe is found.
   while (probe.isprobing) {
-    printString("Probing to sensor");
-    printInteger(probe.active_sensor);
     // Check for user reset and allow
     // protocol_execute_runtime to run in this loop 
     protocol_execute_runtime();
@@ -138,13 +134,12 @@ bool probe_loop()
 
 }
 
+// This function adds support for gcode G38.2
 void probe_move_to_sensor(float * target, float feed_rate, uint8_t invert_feed_rate,
   linenumber_t line_number, enum e_sensor sensor)
 {
   // Set the active probe
   probe.active_sensor = sensor;
-
-  report_debug_message("PROBE MOVE TO SENSOR");
 
   if (sys.state != STATE_CYCLE)
     protocol_auto_cycle_start();
@@ -169,11 +164,10 @@ void probe_move_to_sensor(float * target, float feed_rate, uint8_t invert_feed_r
   probe.isprobing = 1;
 
   sys.state = STATE_PROBING;
-  
-  if (!probe_loop())
-    return;
-
+ 
   uint8_t probe_fail;
+  probe_fail = !probe_loop();
+  
   if (sensor == MAG_SENSOR) {
     probe_fail = (probe.carousel_probe_state == PROBE_ACTIVE);
     if (probe_fail)
@@ -199,10 +193,8 @@ void probe_move_to_sensor(float * target, float feed_rate, uint8_t invert_feed_r
   plan_reset();
   plan_sync_position();
 
-  mc_line(target, feed_rate, invert_feed_rate, PROBE_LINE_NUMBER);
-
   SYS_EXEC |= EXEC_CYCLE_START;
-  
+
   // Complete pull-off action
   protocol_buffer_synchronize();
 
@@ -215,9 +207,9 @@ void probe_move_to_sensor(float * target, float feed_rate, uint8_t invert_feed_r
   sys.state = STATE_IDLE;
   st_go_idle();
 
-  if (sensor == MAG_SENSOR)
-    report_probe_parameters(probe_fail);
   request_eol_report();
+  report_probe_parameters(probe_fail);
+  
 }
 
 // This function monitors the carousel magazine alignment probe

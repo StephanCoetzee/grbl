@@ -50,7 +50,14 @@ static struct {
     .port = &MAGAZINE_ALIGNMENT_PORT
   },
   {
-    .idx = KEY_SENSOR,
+    .idx = KEY_SENSOR_FRONT,
+    .mask = (1 << Z_LIMIT_BIT),
+    .ddr = &LIMIT_DDR,
+    .in_port = &LIMIT_PIN,
+    .port = &LIMIT_PORT
+  },
+  {
+    .idx = KEY_SENSOR_BACK,
     .mask = (1 << Z_LIMIT_BIT),
     .ddr = &LIMIT_DDR,
     .in_port = &LIMIT_PIN,
@@ -85,10 +92,8 @@ void probe_check()
   if (probe_get_active_sensor_state()) {
     // Stop looking for probe
     probe.isprobing = 0;
+    memcpy(sys.probe_position, sys.position, sizeof(float) * N_AXIS);
 
-    // TODO: Report the position where the probe was found
-    // using report_probe_parameters(). This should possibly be
-    // reported in in probe_loop or probe_move_to_sensor instead of here.
   }
 
   // Check for ESTOP
@@ -177,9 +182,6 @@ void probe_move_to_sensor(float * target, float feed_rate, uint8_t invert_feed_r
   uint8_t probe_fail;
   probe_fail = !probe_loop();
  
-  if (!probe_fail)
-    memcpy(sys.probe_position, sys.position, sizeof(float) * N_AXIS);
-
   if (sensor == MAG_SENSOR) {
     probe_fail = (probe.carousel_probe_state == PROBE_ACTIVE);
     if (probe_fail)

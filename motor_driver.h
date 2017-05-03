@@ -1,3 +1,8 @@
+#ifndef MOTOR_DRIVER_H
+#define MOTOR_DRIVER_H
+
+#include "system.h"
+
 enum address_e {
   CTRL = 0,
   TORQUE,
@@ -46,4 +51,4 @@ static const uint8_t scs_pin_lookup[4] = {
 
 };
 
-
+#endif //MOTOR_DRIVER_H

@@ -32,6 +32,7 @@
 #include "signals.h"
 #include "spi.h"
 #include "nuts_bolts.h"
+#include "motor_driver.h"
 
 // Some useful constants.
 #define DT_SEGMENT (1.0/(ACCELERATION_TICKS_PER_SECOND*60.0)) // min/segment
@@ -43,22 +44,6 @@
 //SPI drivers
 #define SPI_ADDRESS_MASK        0x7
 #define SPI_RW_BIT              7
-
-// For use with the SPI driver chip
-typedef enum {
-  XTABLE = 0,
-  YTABLE,
-  GRIPPER,
-  CAROUSEL
-} steppers_t;
-
-static const uint8_t scs_pin_lookup[4] = {
-  SCS_XTABLE_PIN,
-  SCS_YTABLE_PIN,
-  SCS_GRIPPER_PIN,
-  SCS_CAROUSEL_PIN
-  
-};
 
 static int32_t max_servo_steps;
 
@@ -665,7 +650,7 @@ void st_reset()
 
 }
 
-void spi_read_driver_register(uint8_t addr, uint8_t * dataout , steppers_t stepper)
+void spi_read_driver_register(uint8_t addr, uint8_t * dataout , enum stepper_e stepper)
 {
   //For read, MSB should be 1
   uint8_t tx_data[2];
@@ -678,7 +663,7 @@ void spi_read_driver_register(uint8_t addr, uint8_t * dataout , steppers_t stepp
  
 }
 
-void spi_driver_setup(steppers_t stepper)
+void spi_driver_setup(enum stepper_e stepper)
 {
   /* load base */
   for(uint8_t idx = 0; idx <= 14; idx += 2) {
